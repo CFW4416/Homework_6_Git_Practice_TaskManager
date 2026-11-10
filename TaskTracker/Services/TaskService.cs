@@ -62,6 +62,17 @@ namespace TaskTracker.Services
             return false;
         }
 
+        public bool ChangePriority(int id, TaskPriority newPriority)
+        {
+            TaskItem task = GetTaskById(id);
+            if (task != null)
+            {
+                task.Priority = newPriority;
+                return true;
+            }
+            return false;
+        }
+
         public List<TaskItem> GetTasksByStatus(TaskStatus status)
         {
             List<TaskItem> result = new List<TaskItem>();
