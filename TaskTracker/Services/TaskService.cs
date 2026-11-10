@@ -28,51 +28,6 @@ namespace TaskTracker.Services
             return tasks;
         }
 
-        public TaskItem GetTaskById(int id)
-        {
-            for (int i = 0; i < tasks.Count; i++)
-            {
-                if (tasks[i].Id == id)
-                {
-                    return tasks[i];
-                }
-            }
-            return null;
-        }
-
-        public bool RemoveTask(int id)
-        {
-            TaskItem task = GetTaskById(id);
-            if (task != null)
-            {
-                tasks.Remove(task);
-                return true;
-            }
-            return false;
-        }
-
-        public bool ChangeStatus(int id, TaskStatus newStatus)
-        {
-            TaskItem task = GetTaskById(id);
-            if (task != null)
-            {
-                task.Status = newStatus;
-                return true;
-            }
-            return false;
-        }
-
-        public bool ChangePriority(int id, TaskPriority newPriority)
-        {
-            TaskItem task = GetTaskById(id);
-            if (task != null)
-            {
-                task.Priority = newPriority;
-                return true;
-            }
-            return false;
-        }
-
         public List<TaskItem> GetTasksByStatus(TaskStatus status)
         {
             List<TaskItem> result = new List<TaskItem>();
@@ -86,9 +41,28 @@ namespace TaskTracker.Services
             return result;
         }
 
-        public int GetTaskCount()
+        public string GetStatistics()
         {
-            return tasks.Count;
+            int total = tasks.Count;
+            int newCount = GetTasksByStatus(TaskStatus.New).Count;
+            int inProgressCount = GetTasksByStatus(TaskStatus.InProgress).Count;
+            int doneCount = GetTasksByStatus(TaskStatus.Done).Count;
+            int cancelledCount = GetTasksByStatus(TaskStatus.Cancelled).Count;
+
+            return $"Всего: {total} | Новых: {newCount} | В работе: {inProgressCount} | Завершено: {doneCount} | Отменено: {cancelledCount}";
+        }
+
+        public List<TaskItem> GetTasksByPriority(TaskPriority priority)
+        {
+            List<TaskItem> result = new List<TaskItem>();
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i].Priority == priority)
+                {
+                    result.Add(tasks[i]);
+                }
+            }
+            return result;
         }
     }
 }
