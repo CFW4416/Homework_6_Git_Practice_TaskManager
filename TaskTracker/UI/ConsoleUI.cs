@@ -33,6 +33,7 @@ namespace TaskTracker.UI
                         "Добавить задачу",
                         "Изменить статус задачи",
                         "Удалить задачу",
+                        "Фильтровать по приоритету",
                         "Статистика",
                         "Сохранить и выйти"
                     );
@@ -50,8 +51,9 @@ namespace TaskTracker.UI
                     case 2: AddTask(); break;
                     case 3: ChangeTaskStatus(); break;
                     case 4: RemoveTask(); break;
-                    case 5: ShowStatistics(); break;
-                    case 6:
+                    case 5: FilterTasksByPriorityUi(); break;
+                    case 6: ShowStatistics(); break;
+                    case 7:
                         storage.SaveTasks(taskService.GetAllTasks());
                         running = false;
                         Console.WriteLine("Задачи сохранены. До свидания!");
@@ -67,8 +69,9 @@ namespace TaskTracker.UI
             Console.WriteLine("2. Добавить задачу");
             Console.WriteLine("3. Изменить статус задачи");
             Console.WriteLine("4. Удалить задачу");
-            Console.WriteLine("5. Статистика");
-            Console.WriteLine("6. Сохранить и выйти");
+            Console.WriteLine("5. Фильтровать по приоритету");
+            Console.WriteLine("6. Статистика");
+            Console.WriteLine("7. Сохранить и выйти");
         }
 
         private void ShowAllTasks()
@@ -162,6 +165,33 @@ namespace TaskTracker.UI
             else
             {
                 Console.WriteLine("Задача не найдена.");
+            }
+
+            if (useArrowMenu)
+            {
+                Console.WriteLine("\nНажмите любую клавишу для продолжения...");
+                Console.ReadKey();
+            }
+        }
+
+        private void FilterTasksByPriorityUi()
+        {
+            Console.WriteLine();
+            Console.Write("Введите приоритет (Low, Medium, High): ");
+            string input = Console.ReadLine();
+            
+            if (Enum.TryParse(input, true, out TaskPriority priority))
+            {
+                var filtered = taskService.GetTasksByPriority(priority);
+                Console.WriteLine($"\nНайдено задач с приоритетом {priority}: {filtered.Count}");
+                foreach (var task in filtered)
+                {
+                    Console.WriteLine($"- [{task.Id}] {task.Title} (Статус: {task.Status})");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Неверный приоритет.");
             }
 
             if (useArrowMenu)
