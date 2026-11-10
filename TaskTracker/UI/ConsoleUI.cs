@@ -7,28 +7,19 @@ namespace TaskTracker.UI
 {
     public class ConsoleUI
     {
-        private TaskService taskService;
-        private FileStorage storage;
-        private bool useArrowMenu;
+        private readonly TaskService taskService;
+        private readonly FileStorage storage;
+        private readonly bool useArrowMenu;
 
-        public ConsoleUI(TaskService taskService, FileStorage storage, bool useArrowMenu)
+        public ConsoleUI(TaskService taskService, FileStorage storage, string mode)
         {
             this.taskService = taskService;
             this.storage = storage;
-            this.useArrowMenu = useArrowMenu;
+            this.useArrowMenu = mode.Equals("Production", StringComparison.OrdinalIgnoreCase);
         }
 
         public void Run()
         {
-            // Загружаем сохранённые задачи при старте
-            List<TaskItem> saved = storage.LoadTasks();
-            for (int i = 0; i < saved.Count; i++)
-            {
-                TaskItem t = taskService.AddTask(saved[i].Title, saved[i].Description);
-                t.Status = saved[i].Status;
-                t.Priority = saved[i].Priority;
-            }
-
             bool running = true;
             while (running)
             {
@@ -42,29 +33,25 @@ namespace TaskTracker.UI
                         "Добавить задачу",
                         "Изменить статус задачи",
                         "Удалить задачу",
+                        "Статистика",
                         "Сохранить и выйти"
                     );
                 }
                 else
                 {
-                    choice = ShowSimpleMenu();
+                    ShowSimpleMenu();
+                    Console.Write("Выберите пункт: ");
+                    if (!int.TryParse(Console.ReadLine(), out choice)) continue;
                 }
 
                 switch (choice)
                 {
-                    case 1:
-                        ShowAllTasks();
-                        break;
-                    case 2:
-                        AddNewTask();
-                        break;
-                    case 3:
-                        ChangeTaskStatus();
-                        break;
-                    case 4:
-                        RemoveTask();
-                        break;
-                    case 5:
+                    case 1: ShowAllTasks(); break;
+                    case 2: AddTask(); break;
+                    case 3: ChangeTaskStatus(); break;
+                    case 4: RemoveTask(); break;
+                    case 5: ShowStatistics(); break;
+                    case 6:
                         storage.SaveTasks(taskService.GetAllTasks());
                         running = false;
                         Console.WriteLine("Задачи сохранены. До свидания!");
@@ -73,43 +60,32 @@ namespace TaskTracker.UI
             }
         }
 
-        private int ShowSimpleMenu()
+        private void ShowSimpleMenu()
         {
-            Console.WriteLine();
-            Console.WriteLine("=== TaskTracker ===");
+            Console.WriteLine("\n=== TaskTracker ===");
             Console.WriteLine("1. Показать все задачи");
             Console.WriteLine("2. Добавить задачу");
             Console.WriteLine("3. Изменить статус задачи");
             Console.WriteLine("4. Удалить задачу");
-            Console.WriteLine("5. Сохранить и выйти");
-            Console.Write("Выберите действие: ");
-
-            string input = Console.ReadLine();
-            int result;
-            if (int.TryParse(input, out result))
-            {
-                return result;
-            }
-            return 0;
+            Console.WriteLine("5. Статистика");
+            Console.WriteLine("6. Сохранить и выйти");
         }
 
         private void ShowAllTasks()
         {
-            List<TaskItem> tasks = taskService.GetAllTasks();
             Console.WriteLine();
+            List<TaskItem> tasks = taskService.GetAllTasks();
             if (tasks.Count == 0)
             {
                 Console.WriteLine("Список задач пуст.");
             }
             else
             {
-                Console.WriteLine("--- Список задач ---");
-                for (int i = 0; i < tasks.Count; i++)
+                foreach (var task in tasks)
                 {
-                    Console.WriteLine(tasks[i].ToString());
+                    Console.WriteLine(task);
                 }
             }
-
             if (useArrowMenu)
             {
                 Console.WriteLine("\nНажмите любую клавишу для продолжения...");
@@ -117,18 +93,16 @@ namespace TaskTracker.UI
             }
         }
 
-        private void AddNewTask()
+        private void AddTask()
         {
             Console.WriteLine();
-            Console.Write("Название задачи: ");
+            Console.Write("Введите название задачи: ");
             string title = Console.ReadLine();
-
-            Console.Write("Описание задачи: ");
+            Console.Write("Введите описание задачи: ");
             string description = Console.ReadLine();
 
-            TaskItem task = taskService.AddTask(title, description);
-            Console.WriteLine($"Задача добавлена: {task}");
-
+            taskService.AddTask(title, description);
+            Console.WriteLine("Задача успешно добавлена!");
             if (useArrowMenu)
             {
                 Console.WriteLine("\nНажмите любую клавишу для продолжения...");
@@ -139,59 +113,22 @@ namespace TaskTracker.UI
         private void ChangeTaskStatus()
         {
             Console.WriteLine();
-            List<TaskItem> tasks = taskService.GetAllTasks();
-            if (tasks.Count == 0)
-            {
-                Console.WriteLine("Нет задач для изменения.");
-                if (useArrowMenu)
-                {
-                    Console.WriteLine("\nНажмите любую клавишу для продолжения...");
-                    Console.ReadKey();
-                }
-                return;
-            }
+            Console.Write("Введите ID задачи для изменения статуса: ");
+            if (!int.TryParse(Console.ReadLine(), out int id)) return;
 
-            Console.Write("Введите ID задачи: ");
-            string input = Console.ReadLine();
-            int id;
-            if (!int.TryParse(input, out id))
-            {
-                Console.WriteLine("Неверный ID.");
-                return;
-            }
-
-            TaskItem task = taskService.GetTaskById(id);
-            if (task == null)
-            {
-                Console.WriteLine("Задача не найдена.");
-                return;
-            }
-
-            Console.WriteLine($"Текущий статус: {task.Status}");
-            Console.WriteLine("Новый статус:");
             Console.WriteLine("1. New");
             Console.WriteLine("2. InProgress");
             Console.WriteLine("3. Done");
+            Console.WriteLine("4. Cancelled");
             Console.Write("Выберите: ");
+            if (!int.TryParse(Console.ReadLine(), out int statusChoice)) return;
 
-            string statusInput = Console.ReadLine();
-            int statusChoice;
-            if (int.TryParse(statusInput, out statusChoice))
+            switch (statusChoice)
             {
-                switch (statusChoice)
-                {
-                    case 1: taskService.ChangeStatus(id, TaskStatus.New); break;
-                    case 2: taskService.ChangeStatus(id, TaskStatus.InProgress); break;
-                    case 3: taskService.ChangeStatus(id, TaskStatus.Done); break;
-                    default: Console.WriteLine("Неверный выбор."); return;
-                }
-                Console.WriteLine("Статус изменён.");
-            }
-
-            if (useArrowMenu)
-            {
-                Console.WriteLine("\nНажмите любую клавишу для продолжения...");
-                Console.ReadKey();
+                case 1: taskService.ChangeStatus(id, Models.TaskStatus.New); break;
+                case 2: taskService.ChangeStatus(id, Models.TaskStatus.InProgress); break;
+                case 3: taskService.ChangeStatus(id, Models.TaskStatus.Done); break;
+                case 4: taskService.ChangeStatus(id, Models.TaskStatus.Cancelled); break;
             }
         }
 
@@ -212,8 +149,7 @@ namespace TaskTracker.UI
 
             Console.Write("Введите ID задачи для удаления: ");
             string input = Console.ReadLine();
-            int id;
-            if (!int.TryParse(input, out id))
+            if (!int.TryParse(input, out int id))
             {
                 Console.WriteLine("Неверный ID.");
                 return;
@@ -227,6 +163,19 @@ namespace TaskTracker.UI
             {
                 Console.WriteLine("Задача не найдена.");
             }
+
+            if (useArrowMenu)
+            {
+                Console.WriteLine("\nНажмите любую клавишу для продолжения...");
+                Console.ReadKey();
+            }
+        }
+
+        private void ShowStatistics()
+        {
+            Console.WriteLine();
+            Console.WriteLine("--- Статистика ---");
+            Console.WriteLine(taskService.GetStatistics());
 
             if (useArrowMenu)
             {
