@@ -11,11 +11,11 @@ namespace TaskTracker.UI
         private readonly FileStorage storage;
         private readonly bool useArrowMenu;
 
-        public ConsoleUI(TaskService taskService, FileStorage storage, string mode)
+        public ConsoleUI(TaskService taskService, FileStorage storage, bool useArrowMenu)
         {
             this.taskService = taskService;
             this.storage = storage;
-            this.useArrowMenu = mode.Equals("Production", StringComparison.OrdinalIgnoreCase);
+            this.useArrowMenu = useArrowMenu;
         }
 
         public void Run()

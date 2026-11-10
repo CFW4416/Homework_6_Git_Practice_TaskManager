@@ -28,6 +28,32 @@ namespace TaskTracker.Services
             return tasks;
         }
 
+        public bool ChangeStatus(int id, TaskStatus newStatus)
+        {
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i].Id == id)
+                {
+                    tasks[i].Status = newStatus;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool RemoveTask(int id)
+        {
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i].Id == id)
+                {
+                    tasks.RemoveAt(i);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public List<TaskItem> GetTasksByStatus(TaskStatus status)
         {
             List<TaskItem> result = new List<TaskItem>();
